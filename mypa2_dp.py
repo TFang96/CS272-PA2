@@ -92,7 +92,10 @@ class ValueAgent:
         Returns:
             bool: True if continue; False if converged
         """
-        pass     
+        for state in v:
+            if abs(next_v[state] - v[state]) > self.thresh:
+                return True
+        return False
 
 
 class PIAgent(ValueAgent):
