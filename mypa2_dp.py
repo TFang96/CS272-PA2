@@ -47,7 +47,16 @@ class ValueAgent:
         Returns:
             dict[str,dict[str,float]]: a q value table {state:{action:q-value}}
         """
-        pass
+        q = {}
+        for state in self.mdp.states():
+            q[state] = {}
+            for action in self.mdp.actions(state):
+                q_value = 0
+                for s_prime, prob in self.mdp.T(state, action):
+                    q_value += prob * (self.mdp.R(state, action, s_prime) + self.mdp.gamma * v[s_prime])
+                q[state][action] = q_value
+
+        return q
 
     def greedy_policy_improvement(self, v: dict[str,float]) -> dict[str,dict[str,float]]:
         """Greedy policy improvement algorithm. Given a state-value table, update the policy pi.
