@@ -67,7 +67,18 @@ class ValueAgent:
         Returns:
             pi (dict[str,dict[str,float]]): a policy table {state:{action:probability}}
         """
-        pass
+        pi = {}
+        q = self.computeq_fromv(v)
+        for state in self.mdp.states():
+            actions = q[state]
+            max_action = max(actions, key=actions.get)
+            pi[state] = {}
+            for a in actions:
+                if a == max_action:
+                    pi[state][a] = 1
+                else:
+                    pi[state][a] = 0
+        return pi
 
     def check_term(self, v: dict[str,float], next_v: dict[str,float]) -> bool:
         """Return True if the state value has NOT converged.
