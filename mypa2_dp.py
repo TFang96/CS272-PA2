@@ -124,7 +124,17 @@ class PIAgent(ValueAgent):
         Returns:
             dict[str,float]: state-value table {state:v-value}
         """
-        pass
+        updated_v = {}
+        for state in self.mdp.states():
+            sum_of_avg_returns_all_actions = 0
+            for action in pi[state]:
+                probability_pi = pi[state][action]
+                sum_of_avg_returns_action = 0
+                for s_prime, trans_prob in self.mdp.T(state, action):
+                    sum_of_avg_returns_action += trans_prob * (self.mdp.R(state, action, s_prime) + self.mdp.gamma * self.v.get(s_prime))
+                sum_of_avg_returns_all_actions += probability_pi * sum_of_avg_returns_action
+            updated_v[state] = sum_of_avg_returns_all_actions
+        return updated_v
 
 
     def policy_iteration(self) -> dict[str,dict[str,float]]:
