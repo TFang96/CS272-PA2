@@ -153,7 +153,19 @@ class PIAgent(ValueAgent):
         Returns:
             pi (dict[str,dict[str,float]]): a policy table {state:{action:probability}}
         """
-        pass
+        pi = self.pi
+        while True:
+            v = self.v
+            next_v = self.__iter_policy_eval(pi)
+            while self.check_term(v, next_v):
+                v = next_v
+                next_v = self.__iter_policy_eval(pi)
+            self.v = next_v
+            pi_new = self.greedy_policy_improvement(self.v)
+            if pi == pi_new:
+                return pi_new
+            else:
+                pi = pi_new
 
 
 class VIAgent(ValueAgent):
