@@ -158,6 +158,7 @@ class PIAgent(ValueAgent):
             v = self.v
             next_v = self.__iter_policy_eval(pi)
             while self.check_term(v, next_v):
+                self.v = next_v
                 v = next_v
                 next_v = self.__iter_policy_eval(pi)
             self.v = next_v
