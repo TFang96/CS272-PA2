@@ -198,4 +198,28 @@ class VIAgent(ValueAgent):
         Returns:
             pi (dict[str,dict[str,float]]): a policy table {state:{action:probability}}
         """
-        pass
+        v = self.v
+        while True:
+            new_v = {}
+            for state in self.mdp.states():
+                actions = self.mdp.actions(state)
+                if len(actions) == 0:
+                    new_v[state] = 0.0
+                    continue
+
+                action_values = []
+                for action in actions:
+                    action_val = 0.0
+                    for s_prime, prob in self.mdp.T(state, action):
+                        action_val += prob * (self.mdp.R(state, action, s_prime) * self.mdp.gamma * v.get(s_prime))
+                    action_values.append(action_val)
+                new_v[state] = max(action_values)
+            if not self.check_term(v, new_v):
+                v = new_v
+                break
+            v = new_v
+        self.v = v
+        pi = self.greedy_policy_improvement(self.v)
+        return pi
+
+
