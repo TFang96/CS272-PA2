@@ -53,7 +53,7 @@ class ValueAgent:
             for action in self.mdp.actions(state):
                 q_value = 0
                 for s_prime, prob in self.mdp.T(state, action):
-                    q_value += prob * (self.mdp.R(state, action, s_prime) + self.mdp.gamma * v[s_prime])
+                    q_value += prob * (self.mdp.R(state, action, s_prime) + self.mdp.gamma * v.get(s_prime, 0.00))
                 q[state][action] = q_value
 
         return q
@@ -131,7 +131,7 @@ class PIAgent(ValueAgent):
                 probability_pi = pi[state][action]
                 sum_of_avg_returns_action = 0
                 for s_prime, trans_prob in self.mdp.T(state, action):
-                    sum_of_avg_returns_action += trans_prob * (self.mdp.R(state, action, s_prime) + self.mdp.gamma * self.v.get(s_prime))
+                    sum_of_avg_returns_action += trans_prob * (self.mdp.R(state, action, s_prime) + self.mdp.gamma * self.v.get(s_prime, 0.0))
                 sum_of_avg_returns_all_actions += probability_pi * sum_of_avg_returns_action
             updated_v[state] = sum_of_avg_returns_all_actions
         return updated_v
@@ -158,6 +158,7 @@ class PIAgent(ValueAgent):
             v = self.v
             next_v = self.__iter_policy_eval(pi)
             while self.check_term(v, next_v):
+                self.v_update_history.append(self.v)
                 self.v = next_v
                 v = next_v
                 next_v = self.__iter_policy_eval(pi)
@@ -199,7 +200,11 @@ class VIAgent(ValueAgent):
         Returns:
             pi (dict[str,dict[str,float]]): a policy table {state:{action:probability}}
         """
+        if not self.v:
+            for state in self.mdp.states():
+                self.v[state] = 0.0
         v = self.v
+        self.v_update_history.append(v.copy())
         while True:
             new_v = {}
             for state in self.mdp.states():
@@ -212,13 +217,15 @@ class VIAgent(ValueAgent):
                 for action in actions:
                     action_val = 0.0
                     for s_prime, prob in self.mdp.T(state, action):
-                        action_val += prob * (self.mdp.R(state, action, s_prime) * self.mdp.gamma * v.get(s_prime))
+                        action_val += prob * (self.mdp.R(state, action, s_prime) + self.mdp.gamma * v.get(s_prime, 0.0))
                     action_values.append(action_val)
                 new_v[state] = max(action_values)
             if not self.check_term(v, new_v):
                 v = new_v
+                self.v_update_history.append(v.copy())
                 break
             v = new_v
+            self.v_update_history.append(v.copy())
         self.v = v
         pi = self.greedy_policy_improvement(self.v)
         return pi
